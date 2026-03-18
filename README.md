@@ -27,7 +27,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-**Vercel 배포:** Root Directory **`dashboard`**. 환경 변수 **`SUPABASE_DATABASE_URL`** 또는 REST 키. Supabase 연결 방식(Direct 5432 / Pooler 6543)은 **`docs/supabase_connection.md`** 참고.
+**Vercel 배포:** Root Directory **`dashboard`**. 대시보드는 DB URL이 코드에 기본값으로 들어 있어 **환경 변수 없이** 배포 가능(비밀번호 노출 주의). 덮어쓰려면 `SUPABASE_DATABASE_URL`만 설정.
 
 ## 데이터는 어디서 가져오나요?
 

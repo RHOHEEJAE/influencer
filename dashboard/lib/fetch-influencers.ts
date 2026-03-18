@@ -1,24 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
 import type { InfluencerRow } from "./types";
 
-function getSupabaseUrl(): string | null {
-  const u =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    process.env.SUPABASE_URL?.trim();
-  if (!u || u.startsWith("postgres")) return null;
-  return u.replace(/\/$/, "");
-}
-
-/** 신규 Secret(sb_secret_*) · 구 service_role(JWT) · anon · Publishable */
-function getSupabaseKey(): string | null {
-  return (
-    process.env.SUPABASE_SECRET_KEY?.trim() ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
-    null
-  );
-}
+/**
+ * Vercel 환경 변수 없이 배포 가능하도록 기본 연결 문자열을 사용합니다.
+ * ⚠️ 공개 저장소에 푸시하면 DB 비밀번호가 노출됩니다. 비밀번호 변경 또는
+ *    SUPABASE_DATABASE_URL 환경 변수로 덮어쓰기를 권장합니다.
+ */
+const DEFAULT_DATABASE_URL =
+  "postgresql://postgres.hbbpukwapwykstgtdzty:shgmltka12%21@aws-1-us-east-1.pooler.supabase.com:6543/postgres";
 
 function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
   const n = (v: unknown) =>
@@ -39,7 +27,8 @@ function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
     display_name: s(r.display_name),
     followers_count: n(r.followers_count),
     subscribers_count: n(r.subscribers_count),
-    engagement_rate: r.engagement_rate != null ? Number(r.engagement_rate) : null,
+    engagement_rate:
+      r.engagement_rate != null ? Number(r.engagement_rate) : null,
     avg_views: n(r.avg_views),
     avg_likes: n(r.avg_likes),
     avg_comments: n(r.avg_comments),
@@ -51,7 +40,6 @@ function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
   };
 }
 
-/** connectionString 의 sslmode=require 는 Node pg 에서 체인 검증 실패를 자주 유발 → 호스트만 파싱 후 SSL 완화 */
 function parsePostgresUrlForNode(connectionString: string) {
   const u = new URL(connectionString);
   let database = u.pathname.replace(/^\//, "") || "postgres";
@@ -79,10 +67,7 @@ async function fetchViaPostgres(connectionString: string): Promise<{
   } catch (parseErr) {
     const m =
       parseErr instanceof Error ? parseErr.message : String(parseErr);
-    return {
-      data: null,
-      error: `연결 문자열 파싱 실패: ${m}`,
-    };
+    return { data: null, error: `연결 문자열 파싱 실패: ${m}` };
   }
   try {
     await client.connect();
@@ -102,7 +87,7 @@ async function fetchViaPostgres(connectionString: string): Promise<{
     const msg = e instanceof Error ? e.message : String(e);
     return {
       data: null,
-      error: `PostgreSQL 연결/조회 실패: ${msg}\n\n여전히 실패하면 Vercel에는 REST 방식을 권장합니다: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY`,
+      error: `PostgreSQL 연결/조회 실패: ${msg}`,
     };
   } finally {
     try {
@@ -117,42 +102,17 @@ export async function fetchInfluencers(): Promise<{
   data: InfluencerRow[] | null;
   error: string | null;
 }> {
-  const restUrl = getSupabaseUrl();
-  const restKey = getSupabaseKey();
-
-  if (restUrl && restKey) {
-    const supabase = createClient(restUrl, restKey);
-    const { data, error } = await supabase
-      .from("hecto_promo_influencers")
-      .select("*")
-      .order("subscribers_count", { ascending: false, nullsFirst: false });
-    if (error) {
-      return { data: null, error: error.message };
-    }
-    return { data: data as InfluencerRow[], error: null };
-  }
-
   const dbUrl =
     process.env.SUPABASE_DATABASE_URL?.trim() ||
-    process.env.DATABASE_URL?.trim();
-  if (dbUrl?.startsWith("postgres")) {
-    return fetchViaPostgres(dbUrl);
+    process.env.DATABASE_URL?.trim() ||
+    DEFAULT_DATABASE_URL;
+
+  if (!dbUrl.startsWith("postgres")) {
+    return {
+      data: null,
+      error: "postgresql:// 로 시작하는 연결 문자열이 필요합니다.",
+    };
   }
 
-  return {
-    data: null,
-    error: [
-      "Supabase 연결 정보가 없습니다.",
-      "",
-      "방법 A — Python과 동일하게 (권장, Vercel 한 줄 설정):",
-      "  환경 변수 이름: SUPABASE_DATABASE_URL",
-      "  값: postgresql://postgres.xxx:비밀번호@...pooler.supabase.com:6543/postgres?sslmode=require",
-      "",
-      "방법 B — REST API:",
-      "  NEXT_PUBLIC_SUPABASE_URL = https://xxx.supabase.co",
-      "  SUPABASE_SERVICE_ROLE_KEY = (API 화면의 service_role)",
-      "",
-      "저장 후 Redeploy 하세요.",
-    ].join("\n"),
-  };
+  return fetchViaPostgres(dbUrl);
 }
