@@ -1,0 +1,21 @@
+export type InfluencerRow = {
+  id: number;
+  platform: string;
+  channel_id: string;
+  promo_category_key: string;
+  promo_category_label: string;
+  search_query_used: string | null;
+  username: string | null;
+  display_name: string | null;
+  followers_count: number | null;
+  subscribers_count: number | null;
+  engagement_rate: number | null;
+  avg_views: number | null;
+  avg_likes: number | null;
+  avg_comments: number | null;
+  content_categories: string | null;
+  profile_url: string | null;
+  collected_at: string | null;
+  inserted_at: string;
+  updated_at: string;
+};

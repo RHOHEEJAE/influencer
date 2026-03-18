@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/*.csv
+data/*.json
+dashboard/node_modules/
+dashboard/.next/
+dashboard/.env.local
