@@ -9,34 +9,40 @@ export default async function Page() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-6">
-        <div className="max-w-lg rounded-2xl border border-amber-900/50 bg-amber-950/30 p-8 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <div className="max-w-xl rounded-2xl border border-amber-900/50 bg-amber-950/30 p-8">
           <h1 className="text-xl font-semibold text-amber-200">
             데이터를 불러올 수 없습니다
           </h1>
-          <p className="mt-4 text-sm text-amber-100/80">{error}</p>
-          <ul className="mt-6 list-disc space-y-2 pl-5 text-left text-sm text-slate-400">
-            <li>
-              Vercel 환경 변수:{" "}
-              <code className="rounded bg-slate-800 px-1">
-                NEXT_PUBLIC_SUPABASE_URL
-              </code>
-              ,{" "}
-              <code className="rounded bg-slate-800 px-1">
-                SUPABASE_SERVICE_ROLE_KEY
-              </code>
-            </li>
-            <li>
-              Supabase SQL Editor에서{" "}
-              <code className="rounded bg-slate-800 px-1">supabase_schema.sql</code>{" "}
-              실행 후 Python으로 수집 실행
-            </li>
-            <li>
-              anon 키만 쓸 경우 테이블에{" "}
-              <code className="rounded bg-slate-800 px-1">SELECT</code> RLS 정책
-              필요
-            </li>
-          </ul>
+          <pre className="mt-4 whitespace-pre-wrap break-words text-left text-sm leading-relaxed text-amber-100/90">
+            {error}
+          </pre>
+          <div className="mt-8 border-t border-amber-900/40 pt-6 text-left text-sm text-slate-400">
+            <p className="font-medium text-slate-300">Vercel 설정 체크리스트</p>
+            <ol className="mt-3 list-decimal space-y-2 pl-5">
+              <li>
+                <strong className="text-slate-300">Project → Settings → Environment Variables</strong>
+              </li>
+              <li>
+                이름은 <strong className="text-white">정확히</strong> (대소문자 동일):
+                <ul className="mt-1 list-disc pl-4 font-mono text-xs text-sky-300">
+                  <li>NEXT_PUBLIC_SUPABASE_URL</li>
+                  <li>SUPABASE_SERVICE_ROLE_KEY</li>
+                </ul>
+              </li>
+              <li>
+                URL은 <code className="rounded bg-slate-800 px-1">postgres://...</code> 가{" "}
+                <strong className="text-amber-300">아닙니다</strong>. Supabase → Settings →
+                API 의 <strong className="text-white">Project URL</strong> (
+                https://xxxxx.supabase.co) 를 넣으세요.
+              </li>
+              <li>
+                변수 저장 후{" "}
+                <strong className="text-white">Redeploy</strong> 필수 (Deployments → 최신
+                배포 ⋮ → Redeploy). 저장만 하면 기존 빌드에는 반영되지 않습니다.
+              </li>
+            </ol>
+          </div>
         </div>
       </div>
     );
