@@ -27,7 +27,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-**Vercel 배포:** 프로젝트 Root Directory를 **`dashboard`** 로 지정하고, 위 두 환경 변수를 등록한 뒤 Deploy. 자세한 절차는 **`dashboard/README.md`** 참고.
+**Vercel 배포:** Root Directory **`dashboard`**. 환경 변수는 **`SUPABASE_DATABASE_URL`**(Python과 동일한 `postgresql://...`)만 넣어도 됨. 자세히는 **`dashboard/README.md`**.
 
 ## 데이터는 어디서 가져오나요?
 

@@ -20,18 +20,20 @@ npm run dev
 2. [Vercel](https://vercel.com) → **Add New Project** → 해당 레포 선택
 3. **Root Directory** 를 `dashboard` 로 설정  
    (또는 Monorepo에서 `dashboard`만 빌드하도록 설정)
-4. **Environment Variables** (이름·대소문자 그대로):
+4. **Environment Variables** (택 1)
 
-   | Name | 어디서 복사 |
-   |------|-------------|
-   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → **Settings → API → Project URL** (`https://xxx.supabase.co`) |
-   | `SUPABASE_SERVICE_ROLE_KEY` | 같은 화면 **service_role** (Reveal 후 복사) |
+   **A) DB URL만 (Python `.env` 와 동일)** — 가장 간단  
+   | Name | Value |
+   |------|--------|
+   | `SUPABASE_DATABASE_URL` | `postgresql://postgres.xxx:...@...pooler.supabase.com:6543/postgres?sslmode=require` |
 
-   **주의:** `postgresql://...` 형식(DB 연결 문자열)은 넣지 마세요. 대시보드는 **HTTPS Project URL**만 사용합니다.
+   **B) REST API**  
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxx.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | service_role JWT |
 
-5. **Deploy** 후, 변수를 나중에 넣었다면 **Deployments → ⋮ → Redeploy** 로 다시 배포해야 반영됩니다.
+5. **Deploy** 후 **Redeploy** 로 환경 변수 반영.
 
-6. (선택) Preview 배포에도 쓰려면 같은 변수를 **Preview** 환경에도 추가하세요.
+6. Preview에도 쓰려면 같은 변수를 **Preview** 에 추가.
 
 > `service_role` 키는 클라이언트에 노출되지 않습니다(서버 컴포넌트에서만 조회).
 

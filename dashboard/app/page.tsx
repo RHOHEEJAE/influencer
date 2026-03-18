@@ -1,5 +1,5 @@
 import DashboardClient from "@/components/DashboardClient";
-import { fetchInfluencers } from "@/lib/supabase";
+import { fetchInfluencers } from "@/lib/fetch-influencers";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,30 +18,28 @@ export default async function Page() {
             {error}
           </pre>
           <div className="mt-8 border-t border-amber-900/40 pt-6 text-left text-sm text-slate-400">
-            <p className="font-medium text-slate-300">Vercel 설정 체크리스트</p>
-            <ol className="mt-3 list-decimal space-y-2 pl-5">
+            <p className="font-medium text-slate-300">Vercel 설정 (택 1)</p>
+            <ul className="mt-3 list-disc space-y-3 pl-5">
               <li>
-                <strong className="text-slate-300">Project → Settings → Environment Variables</strong>
+                <strong className="text-emerald-300">간단:</strong>{" "}
+                <code className="rounded bg-slate-800 px-1 text-xs">
+                  SUPABASE_DATABASE_URL
+                </code>{" "}
+                에 Python 수집에 쓰는{" "}
+                <code className="rounded bg-slate-800 px-1 text-xs">
+                  postgresql://...
+                </code>{" "}
+                그대로 넣기 → Redeploy
               </li>
               <li>
-                이름은 <strong className="text-white">정확히</strong> (대소문자 동일):
-                <ul className="mt-1 list-disc pl-4 font-mono text-xs text-sky-300">
-                  <li>NEXT_PUBLIC_SUPABASE_URL</li>
-                  <li>SUPABASE_SERVICE_ROLE_KEY</li>
-                </ul>
+                <strong className="text-sky-300">REST:</strong>{" "}
+                <code className="text-xs">NEXT_PUBLIC_SUPABASE_URL</code> (https://xxx.supabase.co) +{" "}
+                <code className="text-xs">SUPABASE_SERVICE_ROLE_KEY</code>
               </li>
-              <li>
-                URL은 <code className="rounded bg-slate-800 px-1">postgres://...</code> 가{" "}
-                <strong className="text-amber-300">아닙니다</strong>. Supabase → Settings →
-                API 의 <strong className="text-white">Project URL</strong> (
-                https://xxxxx.supabase.co) 를 넣으세요.
-              </li>
-              <li>
-                변수 저장 후{" "}
-                <strong className="text-white">Redeploy</strong> 필수 (Deployments → 최신
-                배포 ⋮ → Redeploy). 저장만 하면 기존 빌드에는 반영되지 않습니다.
-              </li>
-            </ol>
+            </ul>
+            <p className="mt-4 text-xs text-slate-500">
+              변수 저장 후 반드시 Deployments → ⋮ → Redeploy
+            </p>
           </div>
         </div>
       </div>
