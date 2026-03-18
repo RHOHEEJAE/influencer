@@ -33,7 +33,9 @@ export default async function Page() {
               </li>
               <li>
                 <strong className="text-sky-300">REST:</strong>{" "}
-                <code className="text-xs">NEXT_PUBLIC_SUPABASE_URL</code> (https://xxx.supabase.co) +{" "}
+                <code className="text-xs">NEXT_PUBLIC_SUPABASE_URL</code> +{" "}
+                <code className="text-xs">SUPABASE_SECRET_KEY</code> (신규{" "}
+                <code className="text-xs">sb_secret_…</code>) 또는 구{" "}
                 <code className="text-xs">SUPABASE_SERVICE_ROLE_KEY</code>
               </li>
             </ul>

@@ -22,10 +22,10 @@ npm run dev
    (또는 Monorepo에서 `dashboard`만 빌드하도록 설정)
 4. **Environment Variables** (택 1)
 
-   **A) DB URL만 (Python `.env` 와 동일)** — 가장 간단  
-   | Name | Value |
-   |------|--------|
-   | `SUPABASE_DATABASE_URL` | `postgresql://postgres.xxx:...@...pooler.supabase.com:6543/postgres?sslmode=require` |
+   **A) DB URL**  
+   - 풀러(6543): `postgresql://postgres.프로젝트ref:...@....pooler.supabase.com:6543/postgres?sslmode=require`  
+   - **Direct(5432)** (SSL 오류 시): `postgresql://postgres:비밀번호@db.프로젝트ref.supabase.co:5432/postgres`  
+   - 차이는 레포 **`docs/supabase_connection.md`** 참고.
 
    **B) REST API**  
    | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxx.supabase.co` |

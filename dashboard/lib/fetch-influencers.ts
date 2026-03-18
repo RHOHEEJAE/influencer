@@ -9,10 +9,13 @@ function getSupabaseUrl(): string | null {
   return u.replace(/\/$/, "");
 }
 
+/** 신규 Secret(sb_secret_*) · 구 service_role(JWT) · anon · Publishable */
 function getSupabaseKey(): string | null {
   return (
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
     null
   );
 }
@@ -48,20 +51,42 @@ function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
   };
 }
 
+/** connectionString 의 sslmode=require 는 Node pg 에서 체인 검증 실패를 자주 유발 → 호스트만 파싱 후 SSL 완화 */
+function parsePostgresUrlForNode(connectionString: string) {
+  const u = new URL(connectionString);
+  let database = u.pathname.replace(/^\//, "") || "postgres";
+  if (database.includes("?")) database = database.split("?")[0];
+  return {
+    host: u.hostname,
+    port: Number(u.port) || 5432,
+    database,
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    ssl: { rejectUnauthorized: false } as const,
+    connectionTimeoutMillis: 20000,
+  };
+}
+
 async function fetchViaPostgres(connectionString: string): Promise<{
   data: InfluencerRow[] | null;
   error: string | null;
 }> {
+  let client: import("pg").Client;
   try {
-    const { Pool } = await import("pg");
-    const pool = new Pool({
-      connectionString,
-      ssl: { rejectUnauthorized: false },
-      max: 1,
-      idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 20000,
-    });
-    const res = await pool.query(`
+    client = new (await import("pg")).Client(
+      parsePostgresUrlForNode(connectionString)
+    );
+  } catch (parseErr) {
+    const m =
+      parseErr instanceof Error ? parseErr.message : String(parseErr);
+    return {
+      data: null,
+      error: `연결 문자열 파싱 실패: ${m}`,
+    };
+  }
+  try {
+    await client.connect();
+    const res = await client.query(`
       SELECT id, platform, channel_id, promo_category_key, promo_category_label,
              search_query_used, username, display_name, followers_count, subscribers_count,
              engagement_rate, avg_views, avg_likes, avg_comments, content_categories,
@@ -69,7 +94,6 @@ async function fetchViaPostgres(connectionString: string): Promise<{
       FROM public.hecto_promo_influencers
       ORDER BY subscribers_count DESC NULLS LAST
     `);
-    await pool.end();
     const data = res.rows.map((row) =>
       pgRowToInfluencer(row as Record<string, unknown>)
     );
@@ -78,8 +102,14 @@ async function fetchViaPostgres(connectionString: string): Promise<{
     const msg = e instanceof Error ? e.message : String(e);
     return {
       data: null,
-      error: `PostgreSQL 연결/조회 실패: ${msg}\n\nPooler(6543) 사용 중이면 sslmode=require 가 URL에 포함돼 있는지 확인하세요.`,
+      error: `PostgreSQL 연결/조회 실패: ${msg}\n\n여전히 실패하면 Vercel에는 REST 방식을 권장합니다: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY`,
     };
+  } finally {
+    try {
+      await client.end();
+    } catch {
+      /* ignore */
+    }
   }
 }
 
