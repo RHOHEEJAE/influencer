@@ -27,7 +27,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-**Vercel 배포:** Root Directory **`dashboard`**. 대시보드는 DB URL이 코드에 기본값으로 들어 있어 **환경 변수 없이** 배포 가능(비밀번호 노출 주의). 덮어쓰려면 `SUPABASE_DATABASE_URL`만 설정.
+**Vercel:** Root Directory **`dashboard`**, Output Directory **비움**. 데이터는 **`/api/influencers`**(서버) → 페이지는 클라이언트에서 호출. 자세한 트러블슈팅은 **`dashboard/VERCEL_배포_체크.md`**.
 
 ## 데이터는 어디서 가져오나요?
 

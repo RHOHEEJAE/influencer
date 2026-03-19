@@ -1,12 +1,33 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import DashboardClient from "@/components/DashboardClient";
-import { fetchInfluencers } from "@/lib/fetch-influencers";
+import type { InfluencerRow } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const runtime = "nodejs";
+export default function HomePage() {
+  const [data, setData] = useState<InfluencerRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function Page() {
-  const { data, error } = await fetchInfluencers();
+  useEffect(() => {
+    fetch("/api/influencers")
+      .then((res) => res.json())
+      .then((body: { data?: InfluencerRow[]; error?: string | null }) => {
+        if (body.error) setError(body.error);
+        else setData(body.data ?? []);
+      })
+      .catch((e) => setError(e?.message ?? String(e)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-slate-400">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+        <p>데이터 불러오는 중…</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -18,23 +39,18 @@ export default async function Page() {
           <pre className="mt-4 whitespace-pre-wrap break-words text-left text-sm leading-relaxed text-amber-100/90">
             {error}
           </pre>
-          <div className="mt-8 border-t border-amber-900/40 pt-6 text-left text-sm text-slate-400">
-            <p className="font-medium text-slate-300">PostgreSQL 직접 연결 실패</p>
-            <p className="mt-2 text-xs">
-              풀러(6543) 연결·테이블 존재·비밀번호를 확인하세요. 연결 문자열을 바꾸려면
-              Vercel에 <code className="rounded bg-slate-800 px-1">SUPABASE_DATABASE_URL</code>{" "}
-              한 개만 넣어도 됩니다.
-            </p>
-          </div>
+          <p className="mt-6 text-xs text-slate-500">
+            Vercel → 해당 배포 → **Functions** 탭에서 `/api/influencers` 로그를 확인해 보세요.
+          </p>
         </div>
       </div>
     );
   }
 
-  if (!data) {
+  if (data === null) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-400">
-        데이터가 없습니다.
+        응답이 없습니다.
       </div>
     );
   }
