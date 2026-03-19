@@ -1,14 +1,14 @@
 import type { InfluencerRow } from "./types";
+import postgres from "postgres";
 
 /**
  * Vercel 환경 변수 없이 배포 가능하도록 기본 연결 문자열을 사용합니다.
- * ⚠️ 공개 저장소에 푸시하면 DB 비밀번호가 노출됩니다. 비밀번호 변경 또는
- *    SUPABASE_DATABASE_URL 환경 변수로 덮어쓰기를 권장합니다.
+ * ⚠️ 공개 저장소에 푸시하면 DB 비밀번호가 노출됩니다.
  */
 const DEFAULT_DATABASE_URL =
   "postgresql://postgres.hbbpukwapwykstgtdzty:shgmltka12%21@aws-1-us-east-1.pooler.supabase.com:6543/postgres";
 
-function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
+function rowToInfluencer(r: Record<string, unknown>): InfluencerRow {
   const n = (v: unknown) =>
     v === null || v === undefined ? null : Number(v);
   const s = (v: unknown) =>
@@ -40,47 +40,29 @@ function pgRowToInfluencer(r: Record<string, unknown>): InfluencerRow {
   };
 }
 
-function parsePostgresUrlForNode(connectionString: string) {
-  const u = new URL(connectionString);
-  let database = u.pathname.replace(/^\//, "") || "postgres";
-  if (database.includes("?")) database = database.split("?")[0];
-  return {
-    host: u.hostname,
-    port: Number(u.port) || 5432,
-    database,
-    user: decodeURIComponent(u.username),
-    password: decodeURIComponent(u.password),
-    ssl: { rejectUnauthorized: false } as const,
-    connectionTimeoutMillis: 20000,
-  };
-}
-
 async function fetchViaPostgres(connectionString: string): Promise<{
   data: InfluencerRow[] | null;
   error: string | null;
 }> {
-  let client: import("pg").Client;
+  const sql = postgres(connectionString, {
+    max: 1,
+    idle_timeout: 5,
+    connect_timeout: 25,
+    ssl: { rejectUnauthorized: false },
+    prepare: false,
+  });
+
   try {
-    client = new (await import("pg")).Client(
-      parsePostgresUrlForNode(connectionString)
-    );
-  } catch (parseErr) {
-    const m =
-      parseErr instanceof Error ? parseErr.message : String(parseErr);
-    return { data: null, error: `연결 문자열 파싱 실패: ${m}` };
-  }
-  try {
-    await client.connect();
-    const res = await client.query(`
+    const rows = await sql`
       SELECT id, platform, channel_id, promo_category_key, promo_category_label,
              search_query_used, username, display_name, followers_count, subscribers_count,
              engagement_rate, avg_views, avg_likes, avg_comments, content_categories,
              profile_url, collected_at, inserted_at, updated_at
       FROM public.hecto_promo_influencers
       ORDER BY subscribers_count DESC NULLS LAST
-    `);
-    const data = res.rows.map((row) =>
-      pgRowToInfluencer(row as Record<string, unknown>)
+    `;
+    const data = (rows as unknown as Record<string, unknown>[]).map((row) =>
+      rowToInfluencer(row)
     );
     return { data, error: null };
   } catch (e) {
@@ -91,7 +73,7 @@ async function fetchViaPostgres(connectionString: string): Promise<{
     };
   } finally {
     try {
-      await client.end();
+      await sql.end();
     } catch {
       /* ignore */
     }

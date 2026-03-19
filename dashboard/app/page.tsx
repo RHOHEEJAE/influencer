@@ -3,6 +3,7 @@ import { fetchInfluencers } from "@/lib/fetch-influencers";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 export default async function Page() {
   const { data, error } = await fetchInfluencers();
