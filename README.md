@@ -27,7 +27,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-**Vercel:** Root Directory **`dashboard`**, Output Directory **비움**. 데이터는 **`/api/influencers`**(서버) → 페이지는 클라이언트에서 호출. 자세한 트러블슈팅은 **`dashboard/VERCEL_배포_체크.md`**.
+**Vercel (로컬 npm 없이):** Git 푸시만 하면 Vercel이 빌드·배포. 절차는 **`dashboard/VERCEL_바로배포.md`**. 레포 루트 **`vercel.json`** 이 `dashboard` 를 가리킴.
 
 ## 데이터는 어디서 가져오나요?
 
